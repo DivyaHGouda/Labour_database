@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Management System</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        input, button, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease-in-out;
+        }
+
+        input:focus, select:focus {
+            border-color: #4caf50;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s ease-in-out;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInTable 0.5s ease-in-out forwards;
+        }
+
+        @keyframes fadeInTable {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .attendance-card {
+            background-color: #4caf50;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-container label {
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+
+        .checkbox-container input {
+            margin-right: 5px;
+            cursor: pointer;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container fade-in">
+        <form id="employee-form">
+            <label for="employeeName">Employee Name:</label>
+            <input type="text" id="employeeName" placeholder="Enter employee name">
+
+            <label for="employeeAddress">Address:</label>
+            <input type="text" id="employeeAddress" placeholder="Enter address">
+
+            <label for="employeeMobile">Mobile Number:</label>
+            <input type="text" id="employeeMobile" placeholder="Enter mobile number">
+
+            <button type="button" onclick="addEmployee()">Add Employee</button>
+        </form>
+
+        <table id="employee-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Mobile Number</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="employee-table-body"></tbody>
+        </table>
+
+        <div class="attendance-card fade-in">
+            <form id="attendance-form">
+                <h2>Mark Attendance</h2>
+                <label for="employeeSelect">Select Employee:</label>
+                <select id="employeeSelect"></select>
+
+                <div class="checkbox-container">
+                    <label>
+                        <input type="checkbox" id="attendanceCheckbox"> Present
+                    </label>
+                </div>
+
+                <button type="button" onclick="markAttendance()">Mark Attendance</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            displayEmployees();
+            populateEmployeeSelect();
+        });
+
+        function addEmployee() {
+            const name = document.getElementById('employeeName').value;
+            const address = document.getElementById('employeeAddress').value;
+            const mobile = document.getElementById('employeeMobile').value;
+
+            if (name.trim() === '' || address.trim() === '' || mobile.trim() === '') {
+                alert('Please enter all details');
+                return;
+            }
+
+            const employee = { name, address, mobile };
+            const employees = JSON.parse(localStorage.getItem('employees')) || [];
+            employees.push(employee);
+            localStorage.setItem('employees', JSON.stringify(employees));
+
+            clearEmployeeForm();
+            displayEmployees();
+            populateEmployeeSelect();
+        }
+
+        function displayEmployees() {
+            const employees = JSON.parse(localStorage.getItem('employees')) || [];
+            const tableBody = document.getElementById('employee-table-body');
+            tableBody.innerHTML = '';
+
+            employees.forEach((employee, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${employee.name}</td>
+                    <td>${employee.address}</td>
+                    <td>${employee.mobile}</td>
+                    <td>
+                        <button onclick="removeEmployee(${index})">Remove</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function populateEmployeeSelect() {
+            const employees = JSON.parse(localStorage.getItem('employees')) || [];
+            const select = document.getElementById('employeeSelect');
+            select.innerHTML = '<option value="" disabled selected>Select an employee</option>';
+
+            employees.forEach((employee, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = employee.name;
+                select.appendChild(option);
+            });
+        }
+
+        function removeEmployee(index) {
+            const employees = JSON.parse(localStorage.getItem('employees')) || [];
+            employees.splice(index, 1);
+            localStorage.setItem('employees', JSON.stringify(employees));
+            displayEmployees();
+            populateEmployeeSelect();
+        }
+
+        function clearEmployeeForm() {
+            document.getElementById('employeeName').value = '';
+            document.getElementById('employeeAddress').value = '';
+            document.getElementById('employeeMobile').value = '';
+        }
+
+        function markAttendance() {
+            const selectedEmployeeIndex = document.getElementById('employeeSelect').value;
+            const isPresent = document.getElementById('attendanceCheckbox').checked;
+
+            if (selectedEmployeeIndex === '' || selectedEmployeeIndex === null) {
+                alert('Please select an employee');
+                return;
+            }
+
+            const employees = JSON.parse(localStorage.getItem('employees')) || [];
+            const selectedEmployee = employees[selectedEmployeeIndex];
+
+            // Simulate marking attendance (you might want to store this data differently)
+            selectedEmployee.attendance = isPresent ? 'Present' : 'Absent';
+            localStorage.setItem('employees', JSON.stringify(employees));
+
+            // Display success message or update UI
+            alert(`${selectedEmployee.name}'s attendance marked as ${isPresent ? 'Present' : 'Absent'}`);
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
